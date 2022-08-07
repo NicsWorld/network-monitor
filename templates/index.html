@@ -1,0 +1,77 @@
+<!doctype html>
+<title>Deon</title>
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dosis&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+
+<div class="container">
+    <div class="card">
+        <div id="range"></div>
+        <div id="devicelength"></div>
+        <div id="devices"></div>
+        <div id="lengthLoader">Scanning for devices.....</div>
+        <div id="devicesLoader">Scanning device info..... just chill</div>
+    </div>
+</div>
+
+<script>
+    const deviceRange = document.getElementById("range");
+    const deviceLength = document.getElementById("devicelength");
+    const devices = document.getElementById("devices");
+    const lengthLoader = document.getElementById("lengthLoader");
+    const devicesLoader = document.getElementById("devicesLoader");
+
+    async function getRange() {
+        await fetch('/api/range')
+        .then((response) => response.text())
+        .then(data => {
+            if (data) {
+                console.log("range:", data);
+                deviceRange.innerHTML = `Range scanned: ${data}`
+            } else {
+                deviceRange.innerHTML = "Error getting device range"
+            }
+        })
+    }
+    async function fetchDeviceLength() {
+        await fetch('/api/length')
+        .then(response => response.json())
+        .then(data => {
+            if (data) {
+                console.log("device length:", data);
+                if (!lengthLoader.classList.contains("hidden")) lengthLoader.classList.add("hidden");
+                deviceLength.innerHTML = `Total devices: ${data}`;
+            } else {
+                deviceLength.innerHTML = "Error getting device length, lol";
+        }
+        });
+        setTimeout(fetchDeviceLength, 60000);
+    }
+
+    async function fetchDevices() {
+        await fetch('/api/devices')
+        .then(response => response.json())
+        .then(data => {
+            if (data) {
+                console.log("devices:", data);
+                if (!devicesLoader.classList.contains("hidden")) devicesLoader.classList.add("hidden");
+                let filteredDevices = data.map((item_arr) => {
+                    return '<div class="device">' + item_arr[0] + " : " + '<span class="address">' + item_arr[2][0] + '</span>' + '</div>'
+                })
+                devices.innerHTML = filteredDevices.join("")
+            } else {
+                devices.innerHTML = "error getting device info, did you do something wrong?";
+        }
+        });
+        setTimeout(fetchDevices, 60000);
+    }
+    fetchDevices();
+    fetchDeviceLength();
+    getRange();
+
+</script>
